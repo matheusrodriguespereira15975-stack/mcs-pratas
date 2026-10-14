@@ -5,3 +5,5 @@ node_modules/
 *.log
 firebase-key*.json
 service-account*.json
+
+.vercel
