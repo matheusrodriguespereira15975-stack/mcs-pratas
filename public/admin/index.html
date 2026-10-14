@@ -42,10 +42,11 @@ async function api(body){
   const d=await r.json().catch(()=>({}));
   if(r.status===401&&T&&body?.action!=='login'){logout();throw new Error(d.error)}
   if(!r.ok)throw new Error(d.error||'Erro '+r.status);return d}
-function logout(){T='';localStorage.removeItem('mcs-admin');$('#app').classList.add('hide');$('#login').classList.remove('hide')}
-async function start(){try{P=(await api()).products;$('#login').classList.add('hide');$('#app').classList.remove('hide');render()}catch(e){$('#lmsg').textContent=T?e.message:''}}
-$('#enter').onclick=async()=>{$('#lmsg').textContent='';try{T=(await api({action:'login',password:$('#pw').value})).token;localStorage.setItem('mcs-admin',T);start()}catch(e){T='';$('#lmsg').textContent=e.message}};
-$('#pw').onkeydown=e=>e.key==='Enter'&&$('#enter').click();$('#out').onclick=logout;$('#q').oninput=render;
+function setLogin(on){$('#pw').disabled=on;$('#enter').disabled=on;$('#enter').textContent=on?'Aguarde...':'Entrar';if(!on)setTimeout(()=>$('#pw').focus(),50)}
+function logout(){T='';localStorage.removeItem('mcs-admin');$('#app').classList.add('hide');$('#login').classList.remove('hide');$('#pw').value='';$('#lmsg').textContent='';setLogin(false)}
+async function start(){try{P=(await api()).products;$('#login').classList.add('hide');$('#app').classList.remove('hide');render()}catch(e){T='';localStorage.removeItem('mcs-admin');$('#lmsg').textContent='Sessão expirada, faça login novamente.';setLogin(false)}}
+$('#enter').onclick=async()=>{if($('#enter').disabled)return;$('#lmsg').textContent='';setLogin(true);try{T=(await api({action:'login',password:$('#pw').value})).token;localStorage.setItem('mcs-admin',T);await start()}catch(e){T='';$('#lmsg').textContent=e.message;setLogin(false)}};
+$('#pw').onkeydown=e=>{if(e.key==='Enter'&&!$('#enter').disabled)$('#enter').click()};$('#out').onclick=logout;$('#q').oninput=render;
 function render(){
   const t=$('#q').value.toLowerCase();
   $('#cats').innerHTML=[...new Set(P.map(p=>p.category))].map(c=>`<option value="${esc(c)}">`).join('');
@@ -67,5 +68,5 @@ $('#saveBtn').onclick=async()=>{const b=$('#saveBtn');b.disabled=true;$('#fmsg')
     const price=parseFloat($('#fprice').value.replace(/\./g,'').replace(',','.'));
     const d=await api({action:'save',product:{id:cur?.id,image,name:$('#fname').value,code:$('#fcode').value,price,category:$('#fcat').value,badge:$('#fbadge').value,description:$('#fdesc').value,active:$('#fact').checked}});
     P=d.products;render();$('#dlg').close()}catch(e){$('#fmsg').textContent=e.message}finally{b.disabled=false}};
-if(T)start();
+if(T){setLogin(true);start();}else{setLogin(false);}
 </script></body></html>
