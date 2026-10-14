@@ -1,0 +1,71 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Painel MCS Jóias</title>
+<style>
+:root{--ink:#170d1c;--lav:#ddc1ed;--soft:#f2e8f7;--line:#e7e1e9;--muted:#766e79;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font:14px Inter,system-ui,sans-serif;color:var(--ink);background:#faf9fa}button,input,select,textarea{font:inherit}
+.top{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:var(--ink);color:#fff}.top b{font:400 18px Georgia,serif}
+.top a,.top button{color:#fff;background:none;border:1px solid #fff5;border-radius:8px;padding:7px 12px;cursor:pointer;text-decoration:none;font-size:12px;margin-left:8px}
+.wrap{max-width:980px;margin:24px auto;padding:0 16px}.bar{display:flex;gap:10px;margin-bottom:16px}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.btn{padding:11px 16px;border:0;border-radius:10px;background:var(--ink);color:#fff;font-weight:700;cursor:pointer;white-space:nowrap}.btn.l{background:var(--soft);color:var(--ink)}.btn.d{background:#fff;color:var(--red);border:1px solid var(--line)}.btn:disabled{opacity:.4;cursor:default}
+.row{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;padding:10px;margin-bottom:8px;background:#fff;border:1px solid var(--line);border-radius:14px}
+.row img{width:56px;height:56px;object-fit:cover;border-radius:10px;background:var(--soft)}.row small{color:var(--muted)}.off{opacity:.5}
+.acts{display:flex;gap:6px}.acts .btn{padding:8px 10px;font-size:12px}
+.login{max-width:360px;margin:14vh auto;padding:28px;background:#fff;border:1px solid var(--line);border-radius:20px;text-align:center}.login h1{font:400 26px Georgia,serif;margin:0 0 18px}.login input{margin-bottom:12px}
+dialog{border:0;border-radius:20px;padding:24px;width:min(520px,94vw);box-shadow:0 28px 90px #0004}dialog::backdrop{background:#170d1c80}
+label{display:block;margin:12px 0 5px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.chk{display:flex;gap:8px;align-items:center;margin-top:14px}.chk input{width:auto}
+.pic{display:grid;place-items:center;height:170px;border:2px dashed var(--line);border-radius:14px;background:var(--soft) center/cover no-repeat;cursor:pointer;color:var(--muted)}
+.msg{color:var(--red);font-size:12px;min-height:16px;margin-top:8px}.hide{display:none!important}
+@media(max-width:600px){.row{grid-template-columns:48px 1fr}.acts{grid-column:1/-1;flex-wrap:wrap}}
+</style></head><body>
+<div class="login" id="login"><h1>Painel MCS</h1><input id="pw" type="password" placeholder="Senha de administrador" autocomplete="current-password"><button class="btn" style="width:100%" id="enter">Entrar</button><div class="msg" id="lmsg"></div></div>
+<div id="app" class="hide">
+ <div class="top"><b>MCS Jóias · Painel</b><div><a href="/" target="_blank">Ver catálogo</a><button id="out">Sair</button></div></div>
+ <div class="wrap"><div class="bar"><input id="q" type="search" placeholder="Buscar por nome, código ou categoria..."><button class="btn" id="new">+ Novo produto</button></div><div id="list"></div></div>
+</div>
+<dialog id="dlg"><h2 id="dtitle" style="margin:0;font:400 22px Georgia,serif"></h2>
+ <label>Foto</label><div class="pic" id="pic">Clique para escolher a foto</div><input type="file" id="file" accept="image/*" class="hide">
+ <label>Nome</label><input id="fname" maxlength="80">
+ <div class="g2"><div><label>Código</label><input id="fcode" placeholder="MCS-AN003"></div><div><label>Preço (R$)</label><input id="fprice" inputmode="decimal" placeholder="129,90"></div></div>
+ <div class="g2"><div><label>Categoria</label><input id="fcat" list="cats" placeholder="Anéis"><datalist id="cats"></datalist></div><div><label>Selo (opcional)</label><input id="fbadge" maxlength="24" placeholder="Novo"></div></div>
+ <label>Descrição</label><textarea id="fdesc" rows="3" maxlength="500"></textarea>
+ <label class="chk" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink)"><input type="checkbox" id="fact"> Visível no catálogo</label>
+ <div class="msg" id="fmsg"></div>
+ <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn l" id="cancel">Cancelar</button><button class="btn" id="saveBtn">Salvar</button></div>
+</dialog>
+<script>
+const $=s=>document.querySelector(s);let T=localStorage.getItem('mcs-admin')||'',P=[],cur=null,newImg=null;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>(+n).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+async function api(body){
+  const r=await fetch('/api/admin',{method:body?'POST':'GET',headers:{'Content-Type':'application/json',Authorization:'Bearer '+T},body:body&&JSON.stringify(body)});
+  const d=await r.json().catch(()=>({}));
+  if(r.status===401&&T&&body?.action!=='login'){logout();throw new Error(d.error)}
+  if(!r.ok)throw new Error(d.error||'Erro '+r.status);return d}
+function logout(){T='';localStorage.removeItem('mcs-admin');$('#app').classList.add('hide');$('#login').classList.remove('hide')}
+async function start(){try{P=(await api()).products;$('#login').classList.add('hide');$('#app').classList.remove('hide');render()}catch(e){$('#lmsg').textContent=T?e.message:''}}
+$('#enter').onclick=async()=>{$('#lmsg').textContent='';try{T=(await api({action:'login',password:$('#pw').value})).token;localStorage.setItem('mcs-admin',T);start()}catch(e){T='';$('#lmsg').textContent=e.message}};
+$('#pw').onkeydown=e=>e.key==='Enter'&&$('#enter').click();$('#out').onclick=logout;$('#q').oninput=render;
+function render(){
+  const t=$('#q').value.toLowerCase();
+  $('#cats').innerHTML=[...new Set(P.map(p=>p.category))].map(c=>`<option value="${esc(c)}">`).join('');
+  $('#list').innerHTML=P.map((p,i)=>({p,i})).filter(({p})=>!t||`${p.name} ${p.code} ${p.category}`.toLowerCase().includes(t)).map(({p,i})=>`
+  <div class="row ${p.active===false?'off':''}"><img src="${esc(p.image)}" alt=""><div><b>${esc(p.name)}</b> ${p.badge?`<small>· ${esc(p.badge)}</small>`:''}<br><small>${esc(p.code)} · ${esc(p.category)} · ${money(p.price)}${p.active===false?' · oculto':''}</small></div>
+  <div class="acts"><button class="btn l" ${i?'':'disabled'} onclick="mv(${i},-1)">↑</button><button class="btn l" ${i<P.length-1?'':'disabled'} onclick="mv(${i},1)">↓</button><button class="btn l" onclick="tg(${p.id})">${p.active===false?'Mostrar':'Ocultar'}</button><button class="btn l" onclick="edit(${p.id})">Editar</button><button class="btn d" onclick="rmv(${p.id})">Excluir</button></div></div>`).join('')||'<p style="color:var(--muted)">Nenhum produto.</p>'}
+async function run(body){try{P=(await api(body)).products;render();return true}catch(e){alert(e.message)}}
+function mv(i,d){const a=P.map(p=>p.id);[a[i],a[i+d]]=[a[i+d],a[i]];run({action:'reorder',ids:a})}
+const tg=id=>{const p=P.find(x=>x.id===id);run({action:'save',product:{...p,active:p.active===false}})};
+const rmv=id=>{const p=P.find(x=>x.id===id);confirm(`Excluir "${p.name}"? Isso não pode ser desfeito.`)&&run({action:'delete',id})};
+function setPic(src){$('#pic').style.backgroundImage=src?`url("${src}")`:'';$('#pic').textContent=src?'':'Clique para escolher a foto'}
+function open_(p){cur=p;newImg=null;$('#dtitle').textContent=p?'Editar produto':'Novo produto';$('#fmsg').textContent='';
+  $('#fname').value=p?.name||'';$('#fcode').value=p?.code||'';$('#fprice').value=p?String(p.price).replace('.',','):'';$('#fcat').value=p?.category||'';$('#fbadge').value=p?.badge||'';$('#fdesc').value=p?.description||'';$('#fact').checked=p?p.active!==false:true;setPic(p?.image);$('#dlg').showModal()}
+const edit=id=>open_(P.find(p=>p.id===id));$('#new').onclick=()=>open_(null);$('#cancel').onclick=()=>$('#dlg').close();$('#pic').onclick=()=>$('#file').click();
+function compress(f){return new Promise((ok,no)=>{const i=new Image;i.onload=()=>{const s=Math.min(1,1200/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=Math.round(i.width*s);c.height=Math.round(i.height*s);c.getContext('2d').drawImage(i,0,0,c.width,c.height);let u=c.toDataURL('image/webp',.85);if(!u.startsWith('data:image/webp'))u=c.toDataURL('image/jpeg',.85);ok(u)};i.onerror=()=>no(new Error('Imagem inválida'));i.src=URL.createObjectURL(f)})}
+$('#file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{newImg=await compress(f);setPic(newImg)}catch(x){$('#fmsg').textContent=x.message}};
+$('#saveBtn').onclick=async()=>{const b=$('#saveBtn');b.disabled=true;$('#fmsg').textContent='';
+  try{let image=cur?.image;if(newImg)image=(await api({action:'upload',dataUrl:newImg})).url;
+    const price=parseFloat($('#fprice').value.replace(/\./g,'').replace(',','.'));
+    const d=await api({action:'save',product:{id:cur?.id,image,name:$('#fname').value,code:$('#fcode').value,price,category:$('#fcat').value,badge:$('#fbadge').value,description:$('#fdesc').value,active:$('#fact').checked}});
+    P=d.products;render();$('#dlg').close()}catch(e){$('#fmsg').textContent=e.message}finally{b.disabled=false}};
+if(T)start();
+</script></body></html>

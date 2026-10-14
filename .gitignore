@@ -1,0 +1,7 @@
+node_modules/
+.vercel
+.env*
+*.local
+*.log
+firebase-key*.json
+service-account*.json
