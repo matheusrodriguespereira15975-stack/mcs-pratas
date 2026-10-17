@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="Catálogo exclusivo de joias em Prata 925 da MCS Jóias. Anéis, brincos, colares e pulseiras com certificado de garantia e pedidos pelo WhatsApp.">
   <meta name="theme-color" content="#120817">
   <title>MCS Jóias · Catálogo Exclusivo em Prata 925</title>
@@ -1783,6 +1783,84 @@
         height: 38px;
       }
     }
+    /* =============================================================
+       AJUSTES DE RESPONSIVIDADE (visual original preservado)
+       ============================================================= */
+    html { -webkit-text-size-adjust: 100%; scroll-padding-top: 96px; }
+    body { overflow-x: clip; min-height: 100dvh; }
+    .wrap { width: min(1220px, 100% - clamp(24px, 5vw, 40px)); }
+
+    /* Espaçamentos e tipografia fluidos */
+    .hero-section { padding: clamp(14px, 2.5vw, 32px) 0 clamp(28px, 4vw, 48px); }
+    .hero-container { padding: clamp(30px, 6vw, 68px) clamp(18px, 5vw, 56px) clamp(26px, 4vw, 54px); border-radius: clamp(20px, 3vw, 28px); }
+    .hero-inner h1 { font-size: clamp(34px, 6.2vw, 68px); }
+    .catalog-section { padding-bottom: clamp(64px, 8vw, 96px); }
+    .catalog-header { scroll-margin-top: 0; }
+
+    /* Cabeçalho e avisos */
+    .top-notice { flex-wrap: wrap; text-align: center; row-gap: 2px; }
+    .brand { min-width: 0; }
+    .brand-copy strong { font-size: clamp(19px, 5vw, 23px); }
+
+    /* Grid: nunca estoura em telas muito estreitas */
+    .product-card { padding: clamp(8px, 1.6vw, 12px); }
+    .card-title { font-size: clamp(15px, 1.9vw, 19px); }
+    .card-add-btn { min-height: 42px; }
+    @media (max-width: 340px) { .grid { grid-template-columns: 1fr !important; } }
+
+    /* Carrinho: altura dinâmica e rolagem correta */
+    .drawer { width: min(480px, 100vw); height: 100dvh; overscroll-behavior: contain; }
+    .drawer-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+    .cart-list { flex: none; overflow: visible; }
+    .drawer-foot { padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+
+    /* Modal e avisos respeitando a tela */
+    .modal { max-height: 92dvh; overscroll-behavior: contain; }
+    .modal-photo img { position: absolute; inset: 0; }
+    .toast { max-width: calc(100% - 28px); bottom: calc(24px + env(safe-area-inset-bottom)); }
+    .footer-links { flex-wrap: wrap; justify-content: center; }
+
+    @media (max-width: 820px) {
+      .nav { gap: 0 12px; }
+      .modal-photo { min-height: 0; aspect-ratio: 1 / 1; }
+      .modal-badge-pills { flex-wrap: wrap; }
+      /* evita zoom automático do iOS ao focar nos campos */
+      .searchbar input, .drawer-form input, .drawer-form select, .drawer-form textarea, .sort-select { font-size: 16px; }
+      .drawer-form input, .drawer-form select, .sort-select { height: 44px; }
+      .drawer-form textarea { height: 64px; }
+      /* abas de categoria rolam até a borda da tela */
+      .tabs-wrapper { margin-inline: calc(-1 * clamp(12px, 3vw, 20px)); padding-inline: clamp(12px, 3vw, 20px); border-radius: 0; border-inline: 0; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+      .tab-btn { scroll-snap-align: center; }
+      /* barra flutuante do carrinho não cobre o rodapé nem o aviso */
+      .mobile-cart-bar { bottom: calc(14px + env(safe-area-inset-bottom)); }
+      .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
+      .site-footer { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+    }
+    @media (max-width: 420px) {
+      .cart-btn { padding: 0 14px; }
+      .cart-btn > span:not(.cart-count) { display: none; }
+      .hero-actions > a { flex: 1 1 100%; justify-content: center; }
+    }
+
+    /* Toque: alvos maiores e sem hover "preso" */
+    @media (pointer: coarse) {
+      .qty-control button { width: 40px; height: 36px; font-size: 16px; }
+      .qty-control span { min-width: 32px; font-size: 13px; }
+      .btn-close { width: 44px; height: 44px; }
+      .remove-btn { padding: 8px 0; }
+      .tab-btn { height: 42px; }
+    }
+    @media (hover: none) {
+      .product-card:hover { transform: none; box-shadow: var(--shadow-sm); border-color: var(--line); }
+      .product-card:hover .card-media img { transform: none; }
+      .card-quick-view { opacity: 1; transform: none; }
+    }
+    .card-quick-view:hover { color: #7c3aed; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
   </style>
 </head>
 <body>
@@ -1960,7 +2038,7 @@
       <button class="btn-close" id="closeCart" aria-label="Fechar carrinho">×</button>
     </div>
 
-    <div class="cart-list" id="cartList">
+    <div class="drawer-scroll"><div class="cart-list" id="cartList">
       <!-- Items rendered by JS -->
     </div>
 
@@ -1982,6 +2060,7 @@
       <textarea id="notes" placeholder="Observações do pedido (ex: tamanho de aro, embalagem de presente, etc.)" aria-label="Observações"></textarea>
     </div>
 
+    </div>
     <div class="drawer-foot">
       <div class="summary-table">
         <div class="summary-row">
@@ -2173,22 +2252,30 @@
 
     /* Render Category Pills (21st.dev Tabs) */
     function renderFilters() {
-      const container = $('#filters');
-      container.innerHTML = categories().map(cat => `
-        <button class="tab-btn ${cat === activeCategory ? 'active' : ''}" data-cat="${cat}" role="tab" aria-selected="${cat === activeCategory}">
-          <span>${cat}</span>
-          <span class="tab-count">${categoryCount(cat)}</span>
-        </button>
-      `).join('');
-
-      $$('.tab-btn', container).forEach(btn => {
-        btn.onclick = () => {
-          activeCategory = btn.dataset.cat;
-          renderFilters();
-          renderProducts();
-        };
+      const c = $('#filters'), cats = categories(), sig = cats.join('|') + PRODUCTS.length;
+      if (c.dataset.sig !== sig) {
+        c.dataset.sig = sig;
+        c.innerHTML = cats.map(cat => `
+          <button class="tab-btn" data-cat="${cat}" role="tab">
+            <span>${cat}</span>
+            <span class="tab-count">${categoryCount(cat)}</span>
+          </button>
+        `).join('');
+      }
+      $$('.tab-btn', c).forEach(b => {
+        const on = b.dataset.cat === activeCategory;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on);
+        if (on) c.scrollTo({ left: b.offsetLeft - (c.clientWidth - b.offsetWidth) / 2, behavior: 'smooth' });
       });
     }
+    $('#filters').onclick = e => {
+      const b = e.target.closest('.tab-btn');
+      if (!b) return;
+      activeCategory = b.dataset.cat;
+      renderFilters();
+      renderProducts();
+    };
 
     function visibleProducts() {
       let list = PRODUCTS.filter(p => {
