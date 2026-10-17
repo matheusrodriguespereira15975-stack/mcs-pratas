@@ -548,6 +548,73 @@
       align-items: center;
     }
 
+    /* Hero Brand Hallmark & SVG Logo */
+    .hero-brand {
+      position: relative;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      z-index: 1;
+    }
+
+    .hero-brand-aura {
+      position: absolute;
+      top: 36%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: clamp(160px, 22vw, 220px);
+      height: clamp(160px, 22vw, 220px);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(225, 190, 255, 0.24) 0%, rgba(192, 132, 252, 0.1) 45%, transparent 72%);
+      filter: blur(28px);
+      pointer-events: none;
+      z-index: 0;
+      animation: heroAuraPulse 5s ease-in-out infinite alternate;
+    }
+
+    @keyframes heroAuraPulse {
+      0% {
+        opacity: 0.65;
+        transform: translate(-50%, -50%) scale(0.92);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.08);
+      }
+    }
+
+    .hero-brand-link {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      margin-bottom: 14px;
+    }
+
+    .hero-brand-link:hover {
+      transform: translateY(-2px);
+    }
+
+    .hero-brand-logo {
+      display: block;
+      height: clamp(74px, 8.5vw, 102px);
+      width: auto;
+      aspect-ratio: 17592 / 22200;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 24px rgba(192, 132, 252, 0.38)) drop-shadow(0 2px 6px rgba(255, 255, 255, 0.3));
+      transition: filter 0.35s ease, transform 0.35s ease;
+    }
+
+    .hero-brand-link:hover .hero-brand-logo {
+      transform: scale(1.03);
+      filter: drop-shadow(0 14px 34px rgba(192, 132, 252, 0.6)) drop-shadow(0 3px 10px rgba(255, 255, 255, 0.5));
+    }
+
     /* 21st.dev Shimmer Pill Badge */
     .hero-pill {
       display: inline-flex;
@@ -1814,6 +1881,20 @@
         padding: 38px 22px 32px;
         border-radius: var(--radius-lg);
       }
+      .hero-brand {
+        margin-bottom: 16px;
+      }
+      .hero-brand-logo {
+        height: clamp(62px, 14vw, 78px);
+      }
+      .hero-brand-link {
+        margin-bottom: 10px;
+      }
+      .hero-pill {
+        font-size: 10px;
+        padding: 5px 13px;
+        margin-bottom: 18px;
+      }
       .hero-inner h1 {
         font-size: 36px;
       }
@@ -2054,7 +2135,7 @@
     <div class="nav wrap">
       <!-- Logo MCS Jóias -->
       <a class="brand" href="#catalogo" aria-label="MCS Jóias — Início do catálogo">
-        <img src="https://i.ibb.co/cK8QpSTf/LOGO-MCS.png" alt="Logo MCS Jóias em Pratas 925" onerror="this.onerror=null;this.src='/logo.png'">
+        <img src="https://i.ibb.co/cK8QpSTf/LOGO-MCS.png" alt="Logo MCS Jóias em Pratas 925" onerror="this.onerror=null;this.src='logo.png'">
         <div class="brand-copy">
           <strong>MCS Jóias</strong>
           <span>Em Pratas 925</span>
@@ -2102,6 +2183,27 @@
           <div class="hero-tilted-overlay" aria-hidden="true"></div>
 
           <div class="hero-inner">
+            <!-- Brand Hallmark & SVG Logo (MCS Jóias) -->
+            <div class="hero-brand" aria-label="MCS Jóias — Prata Legítima 925">
+              <div class="hero-brand-aura" aria-hidden="true"></div>
+              <a class="hero-brand-link" href="#catalogo" aria-label="MCS Jóias — Início do catálogo">
+                <img
+                  src="mcs-logo.svg"
+                  alt="Logo MCS Jóias em Prata Legítima 925"
+                  class="hero-brand-logo"
+                  width="86"
+                  height="108"
+                  loading="eager"
+                  onerror="this.onerror=null;this.src='logo.png'"
+                >
+              </a>
+              <div class="hero-pill">
+                <span class="hero-pill-sparkle">✦</span>
+                <span>Prata Legítima 925 · Alta Joalheria</span>
+                <span class="hero-pill-sparkle">✦</span>
+              </div>
+            </div>
+
             <h1>Joias que eternizam o seu <span class="gradient-text">brilho e elegância.</span></h1>
 
             <p class="hero-subtitle">
@@ -2271,7 +2373,7 @@
   <footer class="site-footer">
     <div class="wrap footer-content">
       <div class="footer-brand">
-        <img src="https://i.ibb.co/cK8QpSTf/LOGO-MCS.png" alt="Logo MCS Jóias" onerror="this.onerror=null;this.src='/logo.png'">
+        <img src="https://i.ibb.co/cK8QpSTf/LOGO-MCS.png" alt="Logo MCS Jóias" onerror="this.onerror=null;this.src='logo.png'">
         <strong>MCS Jóias em Pratas 925</strong>
       </div>
       <div class="footer-links">
