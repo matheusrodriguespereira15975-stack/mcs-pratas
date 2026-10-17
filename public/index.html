@@ -461,9 +461,85 @@
       -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 0%, transparent 80%);
     }
 
+    /* -------------------------------------------------------------
+       21ST.DEV 3D CYLINDER TILTED GRID HERO BACKGROUND
+       Passa joias cadastradas suave e discretamente ao fundo
+       ------------------------------------------------------------- */
+    .hero-tilted-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      overflow: hidden;
+      pointer-events: none;
+      border-radius: inherit;
+      opacity: 0.25;
+      transition: opacity 0.8s ease;
+    }
+
+    .hero-tilted-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, rgba(15, 7, 20, 0.35) 0%, rgba(18, 9, 23, 0.84) 100%);
+    }
+
+    .tgh-viewport {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+      will-change: transform;
+    }
+
+    .tgh-tile {
+      position: absolute;
+      transform-style: preserve-3d;
+      will-change: transform;
+      pointer-events: none;
+    }
+
+    .tgh-slice {
+      position: absolute;
+      top: 0;
+      overflow: hidden;
+      background: rgba(26, 14, 35, 0.7);
+      border-top: 1px solid rgba(221, 193, 237, 0.2);
+      border-bottom: 1px solid rgba(221, 193, 237, 0.2);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .tgh-slice.first-slice {
+      border-left: 1px solid rgba(221, 193, 237, 0.25);
+      border-top-left-radius: 12px;
+      border-bottom-left-radius: 12px;
+    }
+
+    .tgh-slice.last-slice {
+      border-right: 1px solid rgba(221, 193, 237, 0.25);
+      border-top-right-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
+
+    .tgh-slice img {
+      position: absolute;
+      top: 0;
+      max-width: none;
+      object-fit: cover;
+      pointer-events: none;
+      filter: saturate(0.9) contrast(1.05);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tgh-tile {
+        animation-play-state: paused !important;
+      }
+    }
+
     .hero-inner {
       position: relative;
-      z-index: 2;
+      z-index: 3;
       max-width: 820px;
       margin: 0 auto;
       text-align: center;
@@ -2016,10 +2092,14 @@
     <!-- HERO SECTION (21ST.DEV LUXURY SHOWCASE - NO WOMAN PHOTO) -->
     <section class="hero-section" aria-label="Destaque MCS Jóias">
       <div class="wrap">
-        <div class="hero-container">
+        <div class="hero-container" id="heroContainer">
           <div class="hero-grid-bg"></div>
           <div class="hero-glow-1"></div>
           <div class="hero-glow-2"></div>
+
+          <!-- 21st.dev Tilted Grid 3D Curved Cylinder Background -->
+          <div class="hero-tilted-bg" id="heroTiltedBg" aria-hidden="true"></div>
+          <div class="hero-tilted-overlay" aria-hidden="true"></div>
 
           <div class="hero-inner">
             <h1>Joias que eternizam o seu <span class="gradient-text">brilho e elegância.</span></h1>
@@ -2662,6 +2742,199 @@
 
     $('#year').textContent = new Date().getFullYear();
 
+    /* -------------------------------------------------------------
+       21ST.DEV 3D CYLINDER TILTED GRID HERO BACKGROUND
+       Passa imagens dos produtos cadastrados discretamente no fundo
+       ------------------------------------------------------------- */
+    (function initTiltedGridHero() {
+      const container = $('#heroContainer');
+      const bg = $('#heroTiltedBg');
+      if (!container || !bg) return;
+
+      const SLICES = 14;
+      const CAMERA = 1.6;
+      const MAX_WIDTH = 55;
+      const SPEED = 5.5; // Segundos por tile (cadência suave e refinada)
+      const TILE_HEIGHT = 38; // % da altura do container
+      const ASPECT_RATIO = 1.25;
+      const GAP = 8;
+      const CURVE = 78; // Graus de curvatura
+      const AXIS = 52; // Centro vertical da fileira %
+      const FADE = 12; // Largura do fade nas pontas %
+
+      const arc = (bend) => (CAMERA - 1 + Math.cos(bend)) / (2 * CAMERA * Math.sin(bend));
+
+      function getImages() {
+        const valid = (PRODUCTS || []).filter(p => p.image && p.active !== false).map(p => ({
+          src: p.image,
+          alt: p.name || 'Joia MCS'
+        }));
+        if (valid.length) return valid;
+        return [
+          { src: '/seed/1.webp', alt: 'Joia MCS 1' },
+          { src: '/seed/2.webp', alt: 'Joia MCS 2' },
+          { src: '/seed/3.webp', alt: 'Joia MCS 3' },
+          { src: '/seed/4.webp', alt: 'Joia MCS 4' },
+          { src: '/seed/5.webp', alt: 'Joia MCS 5' },
+          { src: '/seed/6.webp', alt: 'Joia MCS 6' }
+        ];
+      }
+
+      let lastWidth = 0;
+      let lastHeight = 0;
+      let styleTag = null;
+
+      function measure(width, height) {
+        const bend = (Math.min(85, Math.max(5, CURVE)) * Math.PI) / 180;
+        const h = Math.min((TILE_HEIGHT / 100) * height, ((MAX_WIDTH / 100) * width) / ASPECT_RATIO);
+        const radius = width * arc(bend);
+        if (!(h > 0) || !(radius > 0)) return null;
+        const deg = rad => (rad * 180) / Math.PI;
+        const unit = deg(h / radius);
+        const pitch = (ASPECT_RATIO + GAP / 100) * unit;
+        const limit = deg(bend) + (ASPECT_RATIO * unit) / 2;
+        const columns = Math.min(36, Math.max(2, Math.ceil((2 * limit) / pitch)));
+        const round = n => +n.toFixed(4);
+        const sweep = round((columns * pitch) / 2);
+        return {
+          columns,
+          sweep,
+          unit: round(unit),
+          limit: round(Math.min(sweep, limit)),
+          radius: round(radius),
+          h: round(h),
+          bend
+        };
+      }
+
+      function buildGrid() {
+        const rect = container.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+        if (!width || !height) return;
+
+        lastWidth = width;
+        lastHeight = height;
+
+        const m = measure(width, height);
+        if (!m) return;
+
+        const { columns, sweep, unit, limit, radius, h } = m;
+        const images = getImages();
+
+        // Pré-carregamento das imagens
+        images.forEach(img => {
+          const i = new Image();
+          i.src = img.src;
+        });
+
+        if (!styleTag) {
+          styleTag = document.createElement('style');
+          styleTag.id = 'tgh-styles';
+          document.head.appendChild(styleTag);
+        }
+
+        const turn = (deg) => `translateZ(${radius}px) rotateY(${+deg.toFixed(4)}deg) translateZ(-${radius}px)`;
+        const hide = +(((sweep - limit) / (2 * sweep || 1)) * 100).toFixed(4);
+
+        styleTag.textContent = `
+          @keyframes tgh-orbit {
+            from { transform: ${turn(-sweep)}; }
+            to { transform: ${turn(sweep)}; }
+            0%, ${hide}%, ${100 - hide}%, 100% { visibility: hidden; }
+            ${hide + 0.001}%, ${100 - hide - 0.001}% { visibility: visible; }
+          }
+        `;
+
+        bg.innerHTML = '';
+        const viewport = document.createElement('div');
+        viewport.className = 'tgh-viewport';
+        viewport.style.perspective = `${+(radius * CAMERA).toFixed(2)}px`;
+        viewport.style.perspectiveOrigin = `50% ${AXIS}%`;
+        const mask = `linear-gradient(90deg, transparent, #000 ${FADE}%, #000 ${100 - FADE}%, transparent)`;
+        viewport.style.maskImage = mask;
+        viewport.style.webkitMaskImage = mask;
+
+        const share = ASPECT_RATIO / SLICES;
+        const duration = columns * SPEED;
+        const tileWidth = +(ASPECT_RATIO * h).toFixed(2);
+        const tileHeight = +h.toFixed(2);
+        const sliceWidth = +(share * h).toFixed(2);
+        const sliceLeft = +(((ASPECT_RATIO - share) / 2) * h).toFixed(2);
+
+        for (let t = 0; t < columns; t++) {
+          const first = columns - 1 - t;
+          const initialImg = images[first % images.length];
+
+          const tile = document.createElement('div');
+          tile.className = 'tgh-tile';
+          tile.style.left = `calc(50% - ${tileWidth / 2}px)`;
+          tile.style.top = `calc(${AXIS}% - ${tileHeight / 2}px)`;
+          tile.style.width = `${tileWidth}px`;
+          tile.style.height = `${tileHeight}px`;
+          tile.style.animation = `tgh-orbit ${duration}s linear ${-t * SPEED}s infinite`;
+
+          tile.addEventListener('animationiteration', (e) => {
+            const lap = Math.round(e.elapsedTime / duration);
+            const nextIdx = (lap * columns + first) % images.length;
+            const nextImg = images[nextIdx];
+            if (nextImg) {
+              tile.querySelectorAll('img').forEach(img => {
+                img.src = nextImg.src;
+                img.alt = nextImg.alt || '';
+              });
+            }
+          });
+
+          for (let k = 0; k < SLICES; k++) {
+            const slice = document.createElement('div');
+            slice.className = 'tgh-slice' + (k === 0 ? ' first-slice' : '') + (k === SLICES - 1 ? ' last-slice' : '');
+            slice.style.left = `${sliceLeft}px`;
+            slice.style.width = `${k === SLICES - 1 ? sliceWidth : sliceWidth + 1}px`;
+            slice.style.height = `${tileHeight}px`;
+
+            const deg = (ASPECT_RATIO / 2 - (k + 0.5) * share) * unit;
+            slice.style.transform = turn(deg);
+
+            const img = document.createElement('img');
+            img.src = initialImg.src;
+            img.alt = initialImg.alt || '';
+            img.draggable = false;
+            img.style.left = `${-(k * sliceWidth)}px`;
+            img.style.width = `${tileWidth}px`;
+            img.style.height = `${tileHeight}px`;
+            img.onerror = () => { img.src = '/seed/1.webp'; };
+
+            slice.appendChild(img);
+            tile.appendChild(slice);
+          }
+
+          viewport.appendChild(tile);
+        }
+
+        bg.appendChild(viewport);
+      }
+
+      window.updateHeroTiltedGrid = function() {
+        buildGrid();
+      };
+
+      const ro = new ResizeObserver(([entry]) => {
+        const { width, height } = entry.contentRect;
+        if (Math.abs(width - lastWidth) > 20 || Math.abs(height - lastHeight) > 20) {
+          buildGrid();
+        }
+      });
+      ro.observe(container);
+
+      // Build inicial
+      if (document.readyState === 'complete') {
+        buildGrid();
+      } else {
+        window.addEventListener('load', buildGrid);
+      }
+    })();
+
     // Initial render with seed products immediately so UI is always responsive
     renderFilters();
     renderProducts();
@@ -2682,6 +2955,7 @@
         renderFilters();
         renderProducts();
         renderCart();
+        if (window.updateHeroTiltedGrid) window.updateHeroTiltedGrid();
       });
   </script>
 </body>
